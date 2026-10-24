@@ -60,3 +60,6 @@ def plot_confusion_matrix(
     ax.figure.tight_layout()
     return ax
 
+def get_labels(Y): 
+    labels = list(set(Y))
+    return labels
