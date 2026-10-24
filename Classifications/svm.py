@@ -5,12 +5,18 @@ import pickle
 import time
 from pathlib import Path
 
-import data as data
-import utils as utils
+if __package__:
+    from Classifications import data, utils
+else:
+    import data
+    import utils
+
 from sklearn import svm
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import LinearSVC
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def kernel(data_get, output_folder, **args):
@@ -56,8 +62,18 @@ def kernel(data_get, output_folder, **args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ip-folder", default="dataset", help="Dataset directory")
-    parser.add_argument("--op-folder", default="results", help="Results directory")
+    parser.add_argument(
+        "--ip-folder",
+        type=Path,
+        default=PROJECT_ROOT / "dataset",
+        help="Dataset directory (default: repository dataset/)",
+    )
+    parser.add_argument(
+        "--op-folder",
+        type=Path,
+        default=PROJECT_ROOT / "results",
+        help="Results directory (default: repository results/)",
+    )
     parser.add_argument(
         "--max-examples",
         type=int,
