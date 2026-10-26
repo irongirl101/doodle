@@ -84,7 +84,7 @@ def main():
     parser.add_argument(
         "--kernel",
         choices=("linear", "poly", "rbf", "sigmoid", "all"),
-        default="rbf",
+        default="sigmoid",
         help="SVM kernel to train (default: linear; 'all' runs every kernel)",
     )
     options = parser.parse_args()
