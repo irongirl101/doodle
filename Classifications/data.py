@@ -23,19 +23,21 @@ class messagedata:
     def get_dev(self): 
         return(self.X_dev, self.y_dev)
 
-    def __init__(self, folder='dataset', binarize=False, max_examples=500):
+    def __init__(self, folder='dataset', binarize=False, max_examples=500, classes=None):
         self.folder = folder
+        if classes is not None and (not classes or len(set(classes)) != len(classes)):
+            raise ValueError("classes must contain at least one unique class name")
         data_dir = Path(folder)
         npy_files = sorted(data_dir.glob("*.npy"))
         if npy_files:
-            features, labels = self._load_npy_files(npy_files, max_examples)
+            features, labels = self._load_npy_files(npy_files, max_examples, classes)
         else:
             shards = sorted(data_dir.rglob("training.tfrecord-*"))
             if not shards:
                 raise FileNotFoundError(
                     f"No .npy files or training TFRecord shards found in {data_dir}"
                 )
-            features, labels = self._load_tfrecords(shards, max_examples)
+            features, labels = self._load_tfrecords(shards, max_examples, classes)
 
         if binarize:
             features = self.binarize(features)
@@ -46,8 +48,15 @@ class messagedata:
         )
 
     @staticmethod
-    def _load_npy_files(files, max_examples):
+    def _load_npy_files(files, max_examples, classes=None):
         features, labels = [], []
+        if classes is not None:
+            files_by_class = {file_path.stem: file_path for file_path in files}
+            missing = [name for name in classes if name not in files_by_class]
+            if missing:
+                raise ValueError("Unknown classes: " + ", ".join(missing))
+            files = [files_by_class[name] for name in classes]
+
         for file_path in files:
             class_features = np.load(file_path, allow_pickle=False)
             if class_features.ndim != 2 or class_features.shape[1] not in (BITMAP, 800):
@@ -61,22 +70,33 @@ class messagedata:
         return np.concatenate(features), np.concatenate(labels)
 
     @staticmethod
-    def _load_tfrecords(shards, max_examples):
+    def _load_tfrecords(shards, max_examples, classes=None):
         import tensorflow as tf
 
         classes_path = shards[0].parent / "training.tfrecord.classes"
         if not classes_path.is_file():
             raise FileNotFoundError(f"Missing class labels file: {classes_path}")
-        class_names = classes_path.read_text(encoding="utf-8").splitlines()
+        available_classes = classes_path.read_text(encoding="utf-8").splitlines()
+        class_names = available_classes if classes is None else classes
+        missing = [name for name in class_names if name not in available_classes]
+        if missing:
+            raise ValueError("Unknown classes: " + ", ".join(missing))
+        selected_indices = {
+            available_classes.index(name): index
+            for index, name in enumerate(class_names)
+        }
         examples, counts = [[] for _ in class_names], np.zeros(len(class_names), dtype=int)
 
         for record in tf.data.TFRecordDataset([str(path) for path in shards]):
             example = tf.train.Example.FromString(record.numpy())
             record_features = example.features.feature
             class_index = record_features["class_index"].int64_list.value[0]
-            if class_index < 0 or class_index >= len(class_names):
+            if class_index < 0 or class_index >= len(available_classes):
                 raise ValueError(f"Invalid class index {class_index} in TFRecord")
-            if max_examples > 0 and counts[class_index] >= max_examples:
+            if class_index not in selected_indices:
+                continue
+            selected_index = selected_indices[class_index]
+            if max_examples > 0 and counts[selected_index] >= max_examples:
                 if np.all(counts >= max_examples):
                     break
                 continue
@@ -85,21 +105,20 @@ class messagedata:
             shape = tuple(record_features["shape"].int64_list.value)
             if len(shape) != 2 or shape[1] != 3 or np.prod(shape) != ink.size:
                 raise ValueError(f"Invalid ink shape {shape} in TFRecord")
-            examples[class_index].append(
+            examples[selected_index].append(
                 messagedata._rasterize_ink(ink.reshape(shape))
             )
-            counts[class_index] += 1
+            counts[selected_index] += 1
 
-        missing = [class_names[i] for i, count in enumerate(counts) if count == 0]
-        if missing:
-            raise ValueError("No training examples for classes: " + ", ".join(missing))
+        empty_classes = [class_names[i] for i, count in enumerate(counts) if count == 0]
+        if empty_classes:
+            raise ValueError("No training examples for classes: " + ", ".join(empty_classes))
 
-        features = np.concatenate([np.stack(group) for group in examples if group])
+        features = np.concatenate([np.stack(group) for group in examples])
         labels = np.concatenate(
             [
                 np.full(count, class_names[index])
                 for index, count in enumerate(counts)
-                if count
             ]
         )
         return features, labels

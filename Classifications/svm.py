@@ -14,7 +14,6 @@ else:
 from sklearn import svm
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.svm import LinearSVC
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,10 +30,7 @@ def kernel(data_get, output_folder, **args):
 
     start_secs = time.perf_counter()
     kernel_name = args.pop("kernel")
-    if kernel_name == "linear":
-        clf = LinearSVC(**args)
-    else:
-        clf = svm.SVC(kernel=kernel_name, **args)
+    clf = svm.SVC(kernel=kernel_name, **args)
     clf.fit(X_train,y_train)
     dur = time.perf_counter() - start_secs
     print('Trained, took',dur,'s')
@@ -81,9 +77,14 @@ def main():
         help="Maximum examples per class (0 means all)",
     )
     parser.add_argument(
+        "--classes",
+        nargs="+",
+        help="Class names to load (default: every class in the dataset)",
+    )
+    parser.add_argument(
         "--kernel",
         choices=("linear", "poly", "rbf", "sigmoid", "all"),
-        default="linear",
+        default="rbf",
         help="SVM kernel to train (default: linear; 'all' runs every kernel)",
     )
     options = parser.parse_args()
@@ -93,6 +94,7 @@ def main():
     data_get = data.messagedata(
         folder=options.ip_folder,
         max_examples=options.max_examples,
+        classes=options.classes,
     )
     kernels = {
         "linear": {},
