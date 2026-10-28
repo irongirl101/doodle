@@ -10,7 +10,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-
 if __package__:
     from Classifications import data, utils
 else:
@@ -180,6 +179,11 @@ def main():
         default="",
         help="Optional suffix used to keep this run's output files separate",
     )
+    parser.add_argument(
+        "--tensorboard",
+        action="store_true",
+        help="Enable TensorBoard logging (requires a working TensorBoard install)",
+    )
     options = parser.parse_args()
     if options.max_epochs <= 0:
         parser.error("--max-epochs must be greater than zero")
@@ -224,7 +228,7 @@ def main():
             keras.utils.to_categorical(y_dev, num_classes=len(encoder.classes_)),
         ),
         epochs=options.max_epochs,
-        callbacks=[get_tensorboard_callback(options)],
+        callbacks=[get_tensorboard_callback(options)] if options.tensorboard else [],
         verbose=2,
     )
     training_time = time.perf_counter() - start_time
