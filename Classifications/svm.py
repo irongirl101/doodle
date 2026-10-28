@@ -1,6 +1,7 @@
 """Train several SVM kernels on the QuickDraw dataset."""
 
 import argparse
+import math
 import pickle
 import time
 from pathlib import Path
@@ -16,6 +17,22 @@ from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import MinMaxScaler
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def parse_gamma(value):
+    if value in ("scale", "auto"):
+        return value
+    try:
+        gamma = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(
+            "gamma must be 'scale', 'auto', or a non-negative number"
+        ) from error
+    if not math.isfinite(gamma) or gamma < 0:
+        raise argparse.ArgumentTypeError(
+            "numeric gamma must be finite and non-negative"
+        )
+    return gamma
 
 
 def kernel(data_get, output_folder, **args):
@@ -84,12 +101,19 @@ def main():
     parser.add_argument(
         "--kernel",
         choices=("linear", "poly", "rbf", "sigmoid", "all"),
-        default="sigmoid",
+        default="linear",
         help="SVM kernel to train (default: linear; 'all' runs every kernel)",
+    )
+    parser.add_argument(
+        "--gamma",
+        type=parse_gamma,
+        help="RBF gamma ('scale', 'auto', or a non-negative number; default: scale)",
     )
     options = parser.parse_args()
     if options.max_examples < 0:
         parser.error("--max-examples must be zero or greater")
+    if options.gamma is not None and options.kernel not in ("rbf", "all"):
+        parser.error("--gamma can only be used with --kernel rbf or --kernel all")
 
     data_get = data.messagedata(
         folder=options.ip_folder,
@@ -99,7 +123,7 @@ def main():
     kernels = {
         "linear": {},
         "poly": {"degree": 5, "coef0": 1},
-        "rbf": {"gamma": 1},
+        "rbf": {"gamma": "scale" if options.gamma is None else options.gamma},
         "sigmoid": {"coef0": 1},
     }
     selected_kernels = kernels if options.kernel == "all" else {

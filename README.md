@@ -29,7 +29,14 @@ python -m Classifications.svm --classes laptop "paint can" wristwatch rain panda
 ```
 
 Use `--kernel` to select another kernel (or `all` to compare them), and
-`--help` for all options.
+`--gamma` to configure the RBF kernel (`scale`, `auto`, or a non-negative
+number; defaults to `scale`). For example:
+
+```sh
+python -m Classifications.svm --classes banana eraser belt --max-examples 70000 --kernel rbf --gamma scale
+```
+
+Use `--help` for all options.
 
 ## Train logistic regression
 
