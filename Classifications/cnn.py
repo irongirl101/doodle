@@ -16,6 +16,8 @@ else:
     import data
     import utils
 
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EPOCHS = 100 
 BATCH_SIZE = 500 
@@ -205,7 +207,6 @@ MODEL_VARIANTS = {
     "v5": model_v5,
 }
 
-
 def one_hot(index,num_classes): 
     result = np.zeros(num_classes)
     result[index] = 1
@@ -293,7 +294,6 @@ def main():
     X_train = prepare_images(X_train)
     X_dev = prepare_images(X_dev)
     X_test = prepare_images(X_test)
-
     model_names = list(MODEL_VARIANTS) if options.model == "all" else [options.model]
     output_folder = Path(options.op_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -326,7 +326,6 @@ def main():
             predictions,
             labels=np.arange(len(class_names)),
         )
-
         classifier.save(get_model_filename(options))
         classifier.save_weights(get_model_weights_filename(options))
         with get_class_filename(options).open("wb") as file:
@@ -334,24 +333,24 @@ def main():
         with get_confusion_matrix_filename(options).open("wb") as file:
             pickle.dump(matrix, file)
 
-        ax = utils.plot_confusion_matrix(
+    ax = utils.plot_confusion_matrix(
             matrix, class_names, title=f"CNN {model_name} test confusion matrix"
         )
-        ax.figure.savefig(
+    ax.figure.savefig(
             output_folder / f"{get_confusion_matrix_name(options)}.png",
             bbox_inches="tight",
-        )
-        import matplotlib.pyplot as plt
+    )
+    import matplotlib.pyplot as plt
 
-        plt.close(ax.figure)
-        report = (
+    plt.close(ax.figure)
+    report = (
             f"Model: {model_name}\n"
             f"Training time: {training_time:.1f} seconds\n"
             f"Test loss: {test_loss:.4f}\n"
             f"Test accuracy: {test_accuracy:.4f}\n"
         )
-        get_experiment_report_filename(options).write_text(report, encoding="utf-8")
-        print(report, end="")
+    get_experiment_report_filename(options).write_text(report, encoding="utf-8")
+    print(report, end="")
 
     options.model = "v1"
 
