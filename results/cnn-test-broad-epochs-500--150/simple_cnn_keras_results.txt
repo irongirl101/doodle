@@ -1,0 +1,3 @@
+Training time: 1646.4 seconds
+Test loss: 16.1785
+Test accuracy: 0.2434
