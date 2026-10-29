@@ -38,6 +38,34 @@ python -m Classifications.svm --classes banana eraser belt --max-examples 70000 
 
 Use `--help` for all options.
 
+## Train the CNN
+
+The CNN uses the same QuickDraw training TFRecord data and 28-by-28 bitmap
+conversion. To try a small three-class run:
+
+```sh
+python -m Classifications.cnn --classes banana eraser belt --max-examples 500 --max-epochs 20 --experiment-name three-class
+```
+
+To train across every class in the dataset, omit `--classes`. For a larger
+run, increase the per-class sample limit:
+
+```sh
+python -m Classifications.cnn --max-examples 500 --max-epochs 100 --experiment-name all-classes
+```
+
+The default is 100 examples per class and 100 epochs. `--max-examples 0`
+loads all available examples, which can require substantial memory. The data
+loader makes per-class train/dev/test splits from the training TFRecord files;
+the test score is therefore a held-out portion of those files, not a score on
+the dataset's separate official evaluation TFRecords.
+
+The CNN reports test loss and accuracy and writes the model, weights, class
+names, confusion matrix, and report to `results/`. The experiment name is
+appended to output filenames so runs can be kept separate. TensorBoard is
+optional and can be enabled with `--tensorboard` when it is installed and
+working in the active Python environment. Use `--help` for all options.
+
 ## Train logistic regression
 
 The logistic-regression baseline uses unscaled bitmap features, the `lbfgs`
