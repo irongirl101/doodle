@@ -66,6 +66,23 @@ appended to output filenames so runs can be kept separate. TensorBoard is
 optional and can be enabled with `--tensorboard` when it is installed and
 working in the active Python environment. Use `--help` for all options.
 
+## Train the VGG16 transfer-learning classifier
+
+The VGG16 script resizes the 28-by-28 drawings to 224-by-224 RGB images and
+applies VGG16 preprocessing. It first trains a classifier head over frozen
+ImageNet-pretrained VGG16 features, then fine-tunes the final four VGG16 layers
+at a lower learning rate. For a small run:
+
+```sh
+python -m Classifications.vgg --classes banana eraser belt --max-examples 100 --max-epochs 5 --fine-tune-epochs 5 --experiment-name three-class
+```
+
+Use `--fine-tune-layers` to change how many of the final VGG16 layers are
+unfrozen, `--tensorboard` to enable TensorBoard logs, and `--help` for all
+options. The script saves separate models and confusion matrices for the
+transfer-learning and fine-tuned phases under `results/`. The first run may
+download the pretrained VGG16 weights if they are not already cached.
+
 ## Train logistic regression
 
 The logistic-regression baseline uses unscaled bitmap features, the `lbfgs`
