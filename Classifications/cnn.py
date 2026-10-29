@@ -120,9 +120,10 @@ def encode_values(encoder, Y, confoose=False):
 def decode(encoder, y):
     return encoder.inverse_transform(y)
 
+# 1 layers of conv
 def model_v1(num_classes):
     classifier = Sequential()
-    classifier.add(Conv2D(16, (3, 3), input_shape=(28, 28, 1), activation="relu"))
+    classifier.add(Conv2D(14, (3, 3), input_shape=(28, 28, 1), activation="relu"))
     classifier.add(MaxPooling2D(pool_size=(2, 2)))
     classifier.add(Flatten())
     classifier.add(Dense(units=128, activation="relu"))
@@ -133,6 +134,68 @@ def model_v1(num_classes):
         metrics=["accuracy"],
     )
     return classifier
+
+# 2 layer of conv 
+def model_v2(num_classes): 
+    classifier = Sequential() 
+    classifier.add(Conv2D(14, (3, 3), input_shape=(28, 28, 1), activation="relu"))
+    classifier.add(MaxPooling2D(pool_size=(2,2)))
+    classifier.add(Conv2D(14,(3,3),activation='relu'))
+    classifier.add(MaxPooling2D(pool_size=(2,2)))
+    classifier.add(Flatten())
+    classifier.add(Dense(units=128,activation='relu'))
+    classifier.add(Dense(num_classes,activation='softmax'))
+    classifier.compile(
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+    return classifier
+
+# 1 layer of conv but no maxpooling 
+def model_v3(num_classes):
+    classifier = Sequential() 
+    classifier.add(Conv2D(14,(3,3), input_shape = (28,28,1), activation='relu'))
+    classifier.add(Flatten())
+    classifier.add(Dense(units=128,activation='relu'))
+    classifier.add(Dense(num_classes,activation='softmax'))
+    classifier.compile(
+                optimizer="adam",
+                loss="categorical_crossentropy",
+                metrics=["accuracy"],
+            )
+    return classifier
+
+# change dense units to 128 
+def model_v4(num_classes): 
+        classifier = Sequential()
+        classifier.add(Conv2D(14, (3, 3), input_shape=(28, 28, 1), activation="relu"))
+        classifier.add(MaxPooling2D(pool_size=(2, 2)))
+        classifier.add(Flatten())
+        classifier.add(Dense(units=256, activation="relu"))
+        classifier.add(Dense(num_classes, activation="softmax"))
+        classifier.compile(
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+        return classifier
+
+# change dense units to 64 
+def model_v5(num_classes): 
+        classifier = Sequential()
+        classifier.add(Conv2D(14, (3, 3), input_shape=(28, 28, 1), activation="relu"))
+        classifier.add(MaxPooling2D(pool_size=(2, 2)))
+        classifier.add(Flatten())
+        classifier.add(Dense(units=64, activation="relu"))
+        classifier.add(Dense(num_classes, activation="softmax"))
+        classifier.compile(
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+        return classifier
+
 
 def one_hot(index,num_classes): 
     result = np.zeros(num_classes)
