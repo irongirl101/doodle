@@ -16,8 +16,6 @@ else:
     import data
     import utils
 
-
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EPOCHS = 100 
 BATCH_SIZE = 500 
@@ -58,7 +56,9 @@ def get_model_filename(options):
 
 
 def get_model_name_only(options):
-    return f"{model_file}{get_suffix_name(options)}"
+    if options.model == "v1":
+        return f"{model_file}{get_suffix_name(options)}"
+    return f"{model_file}_{options.model}{get_suffix_name(options)}"
 
 
 def get_tensorboard_directory(options):
@@ -197,6 +197,15 @@ def model_v5(num_classes):
         return classifier
 
 
+MODEL_VARIANTS = {
+    "v1": model_v1,
+    "v2": model_v2,
+    "v3": model_v3,
+    "v4": model_v4,
+    "v5": model_v5,
+}
+
+
 def one_hot(index,num_classes): 
     result = np.zeros(num_classes)
     result[index] = 1
@@ -243,6 +252,12 @@ def main():
         help="Optional suffix used to keep this run's output files separate",
     )
     parser.add_argument(
+        "--model",
+        choices=("v1", "v2", "v3", "v4", "v5", "all"),
+        default="v1",
+        help="CNN architecture to train (default: v1; 'all' runs every architecture)",
+    )
+    parser.add_argument(
         "--tensorboard",
         action="store_true",
         help="Enable TensorBoard logging (requires a working TensorBoard install)",
@@ -278,60 +293,67 @@ def main():
     X_train = prepare_images(X_train)
     X_dev = prepare_images(X_dev)
     X_test = prepare_images(X_test)
-    classifier = model_v1(len(encoder.classes_))
+
+    model_names = list(MODEL_VARIANTS) if options.model == "all" else [options.model]
     output_folder = Path(options.op_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    start_time = time.perf_counter()
-    history = classifier.fit(
-        X_train,
-        keras.utils.to_categorical(y_train, num_classes=len(encoder.classes_)),
-        validation_data=(
-            X_dev,
-            keras.utils.to_categorical(y_dev, num_classes=len(encoder.classes_)),
-        ),
-        epochs=options.max_epochs,
-        callbacks=[get_tensorboard_callback(options)] if options.tensorboard else [],
-        verbose=2,
-    )
-    training_time = time.perf_counter() - start_time
-    test_loss, test_accuracy = classifier.evaluate(
-        X_test,
-        keras.utils.to_categorical(y_test, num_classes=len(encoder.classes_)),
-        verbose=0,
-    )
-    predictions = np.argmax(classifier.predict(X_test, verbose=0), axis=1)
-    class_names = encoder.classes_.tolist()
-    matrix = confusion_matrix(
-        y_test,
-        predictions,
-        labels=np.arange(len(class_names)),
-    )
+    for model_name in model_names:
+        options.model = model_name
+        classifier = MODEL_VARIANTS[model_name](len(encoder.classes_))
+        start_time = time.perf_counter()
+        history = classifier.fit(
+            X_train,
+            keras.utils.to_categorical(y_train, num_classes=len(encoder.classes_)),
+            validation_data=(
+                X_dev,
+                keras.utils.to_categorical(y_dev, num_classes=len(encoder.classes_)),
+            ),
+            epochs=options.max_epochs,
+            callbacks=[get_tensorboard_callback(options)] if options.tensorboard else [],
+            verbose=2,
+        )
+        training_time = time.perf_counter() - start_time
+        test_loss, test_accuracy = classifier.evaluate(
+            X_test,
+            keras.utils.to_categorical(y_test, num_classes=len(encoder.classes_)),
+            verbose=0,
+        )
+        predictions = np.argmax(classifier.predict(X_test, verbose=0), axis=1)
+        class_names = encoder.classes_.tolist()
+        matrix = confusion_matrix(
+            y_test,
+            predictions,
+            labels=np.arange(len(class_names)),
+        )
 
-    classifier.save(get_model_filename(options))
-    classifier.save_weights(get_model_weights_filename(options))
-    with get_class_filename(options).open("wb") as file:
-        pickle.dump(class_names, file)
-    with get_confusion_matrix_filename(options).open("wb") as file:
-        pickle.dump(matrix, file)
+        classifier.save(get_model_filename(options))
+        classifier.save_weights(get_model_weights_filename(options))
+        with get_class_filename(options).open("wb") as file:
+            pickle.dump(class_names, file)
+        with get_confusion_matrix_filename(options).open("wb") as file:
+            pickle.dump(matrix, file)
 
-    ax = utils.plot_confusion_matrix(
-        matrix, class_names, title="CNN test confusion matrix"
-    )
-    ax.figure.savefig(
-        output_folder / f"{get_confusion_matrix_name(options)}.png",
-        bbox_inches="tight",
-    )
-    import matplotlib.pyplot as plt
+        ax = utils.plot_confusion_matrix(
+            matrix, class_names, title=f"CNN {model_name} test confusion matrix"
+        )
+        ax.figure.savefig(
+            output_folder / f"{get_confusion_matrix_name(options)}.png",
+            bbox_inches="tight",
+        )
+        import matplotlib.pyplot as plt
 
-    plt.close(ax.figure)
-    report = (
-        f"Training time: {training_time:.1f} seconds\n"
-        f"Test loss: {test_loss:.4f}\n"
-        f"Test accuracy: {test_accuracy:.4f}\n"
-    )
-    get_experiment_report_filename(options).write_text(report, encoding="utf-8")
-    print(report, end="")
+        plt.close(ax.figure)
+        report = (
+            f"Model: {model_name}\n"
+            f"Training time: {training_time:.1f} seconds\n"
+            f"Test loss: {test_loss:.4f}\n"
+            f"Test accuracy: {test_accuracy:.4f}\n"
+        )
+        get_experiment_report_filename(options).write_text(report, encoding="utf-8")
+        print(report, end="")
+
+    options.model = "v1"
 
 
 if __name__ == "__main__":
