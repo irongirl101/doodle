@@ -78,3 +78,6 @@ python -m Classifications.logs --classes banana eraser belt --max-examples 70000
 
 It reports dev and test accuracy and saves a dev-set confusion matrix to
 `results/`. Use `--max-iter` to change the solver iteration limit.
+
+## So far.. 
+The best results have been (for 3 classes) from SVM RBF with gamma scale, and CNN with the base example (67% and 84% respectively). 
