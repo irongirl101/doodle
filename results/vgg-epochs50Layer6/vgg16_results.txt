@@ -1,0 +1,9 @@
+Phase: transfer learning
+Training time: 309.7 seconds
+Test loss: 0.5440
+Test accuracy: 0.7667
+
+Phase: fine-tuning (6 VGG16 layers unfrozen)
+Training time: 426.9 seconds
+Test loss: 0.4192
+Test accuracy: 0.8000
