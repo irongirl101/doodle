@@ -168,7 +168,7 @@ def model_v3(num_classes):
             )
     return classifier
 
-# change dense units to 128 
+# change dense units to 256 
 def model_v4(num_classes): 
         classifier = Sequential()
         classifier.add(Conv2D(14, (3, 3), input_shape=(28, 28, 1), activation="relu"))

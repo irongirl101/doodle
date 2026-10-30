@@ -38,6 +38,19 @@ python -m Classifications.svm --classes banana eraser belt --max-examples 70000 
 
 Use `--help` for all options.
 
+## Train the random forest classifier
+
+The random forest uses the same QuickDraw dataset and train/dev/test split:
+
+```sh
+python -m Classifications.randomforest --classes banana eraser belt --max-examples 500
+```
+
+Use `--n-estimators` to set the number of trees and `--max-depth` to limit
+their depth. The default is 100 trees with unlimited depth. The classifier
+reports dev accuracy and writes the class names and confusion matrix to
+`results/`. Use `--help` for all options.
+
 ## Train the CNN
 
 The CNN uses the same QuickDraw training TFRecord data and 28-by-28 bitmap
