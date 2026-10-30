@@ -10,10 +10,10 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.applications import VGG16
-from tensorflow.keras.applications.vgg16 import preprocess_input
-from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D, Input
-from tensorflow.keras.models import Model
+from keras.applications import VGG16
+from keras.applications.vgg16 import preprocess_input
+from keras.layers import Dense, Dropout, GlobalAveragePooling2D, Input
+from keras.models import Model
 
 if __package__:
     from Classifications import data, utils
