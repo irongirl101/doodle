@@ -183,3 +183,5 @@ cython_debug/
 /dataset/
 
 .vscode
+vgg16_model_fine_tuned.keras 
+vgg16_model_fine_tuned.weights.h5
