@@ -17,7 +17,6 @@ else:
     import utils
 
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EPOCHS = 100 
 BATCH_SIZE = 500 
