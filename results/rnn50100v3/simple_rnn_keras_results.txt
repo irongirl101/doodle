@@ -1,0 +1,4 @@
+Model: v3
+Training time: 3.1 seconds
+Test loss: 2.6749
+Test accuracy: 0.6667

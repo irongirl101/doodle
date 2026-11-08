@@ -136,7 +136,7 @@ def model_v1(num_classes):
     return model
 
 
-"""def model_v2(num_classes):
+def model_v2(num_classes):
     model = Sequential([
         keras.Input(shape=(28, 28)),
         SimpleRNN(64, activation="relu", return_sequences=True),
@@ -175,15 +175,15 @@ def model_v5(num_classes):
         Dense(num_classes, activation="softmax"),
     ])
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-    return model"""
+    return model
 
 
 MODEL_VARIANTS = {
     "v1": model_v1,
-   # "v2": model_v2,
-   # "v3": model_v3,
-    #"v4": model_v4,
-    #"v5": model_v5,
+    "v2": model_v2,
+    "v3": model_v3,
+    "v4": model_v4,
+    "v5": model_v5,
 }
 
 def one_hot(index,num_classes): 
