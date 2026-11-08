@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf 
 from sklearn.metrics import confusion_matrix
 from keras.models import Sequential
-from keras.layers import SimpleRNN, Dense
+from keras.layers import SimpleRNN, Dense, Bidirectional, GRU, Dropout, Conv2D, MaxPooling2D,Reshape
 import keras 
 from sklearn.preprocessing import LabelEncoder
 
@@ -177,6 +177,16 @@ def model_v5(num_classes):
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 
+def model_v6(num_classes): 
+    model = Sequential([
+        keras.Input(shape=(28,28)),
+        Bidirectional(GRU(64,return_sequences=True)),
+        Bidirectional(GRU(64)),
+        Dropout(0.3),   
+        Dense(num_classes,activation="softmax")
+    ])
+    model.compile(optimizer=keras.optimizers.Adam(1e-3,clipnorm=1.0), loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
 MODEL_VARIANTS = {
     "v1": model_v1,
@@ -184,6 +194,7 @@ MODEL_VARIANTS = {
     "v3": model_v3,
     "v4": model_v4,
     "v5": model_v5,
+    "v6": model_v6,
 }
 
 def one_hot(index,num_classes): 
@@ -233,9 +244,9 @@ def main():
     )
     parser.add_argument(
         "--model",
-        choices=("v1", "v2", "v3", "v4", "v5", "all"),
+        choices=("v1", "v2", "v3", "v4", "v5", "v6", "all"),
         default="v1",
-        help="CNN architecture to train (default: v1; 'all' runs every architecture)",
+        help="RNN architecture to train (default: v1; 'all' runs every architecture)",
     )
     parser.add_argument(
         "--tensorboard",

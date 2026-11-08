@@ -1,0 +1,4 @@
+Model: v6
+Training time: 8.7 seconds
+Test loss: 1.6599
+Test accuracy: 0.6333
