@@ -188,6 +188,22 @@ def model_v6(num_classes):
     model.compile(optimizer=keras.optimizers.Adam(1e-3,clipnorm=1.0), loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+def model_v7(num_classes): 
+    model = Sequential([
+        keras.Input(shape=(28,28)),
+        Reshape((28,28,1)), 
+        Conv2D(32,3, padding='same',activation='relu'), 
+        MaxPooling2D(2),
+        Conv2D(64,3,padding='same', activation='relu'),
+        MaxPooling2D(2),
+        Reshape((7,7*64)), 
+        Bidirectional(GRU(64)),   
+        Dropout(0.3),
+        Dense(num_classes,activation='softmax')
+    ])
+    model.compile(optimizer=keras.optimizers.Adam(1e-3,clipnorm=1.5),loss='categorical_crossentropy',metrics=['accuracy'])
+    return model
+
 MODEL_VARIANTS = {
     "v1": model_v1,
     "v2": model_v2,
@@ -195,6 +211,7 @@ MODEL_VARIANTS = {
     "v4": model_v4,
     "v5": model_v5,
     "v6": model_v6,
+    "v7": model_v7
 }
 
 def one_hot(index,num_classes): 
@@ -244,7 +261,7 @@ def main():
     )
     parser.add_argument(
         "--model",
-        choices=("v1", "v2", "v3", "v4", "v5", "v6", "all"),
+        choices=("v1", "v2", "v3", "v4", "v5", "v6", "v7", "all"),
         default="v1",
         help="RNN architecture to train (default: v1; 'all' runs every architecture)",
     )

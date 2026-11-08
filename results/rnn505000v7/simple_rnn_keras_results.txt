@@ -1,0 +1,4 @@
+Model: v7
+Training time: 126.6 seconds
+Test loss: 0.7541
+Test accuracy: 0.8913
