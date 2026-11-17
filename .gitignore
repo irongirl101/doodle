@@ -185,3 +185,5 @@ cython_debug/
 .vscode
 vgg16_model_fine_tuned.keras 
 vgg16_model_fine_tuned.weights.h5
+
+.DS_Store
