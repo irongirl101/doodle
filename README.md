@@ -1,7 +1,58 @@
 # doodle
 
-Dataset 
+A collection of QuickDraw drawing classifiers implemented with scikit-learn,
+TensorFlow/Keras, and VGG16 transfer learning.
+
+## Dataset
+
+Download the QuickDraw tutorial dataset:
+
 http://download.tensorflow.org/data/quickdraw_tutorial_dataset_v1.tar.gz
+
+Extract the archive under `dataset/`. The scripts accept either:
+
+- `dataset/<dataset-name>/training.tfrecord-*` and
+  `dataset/<dataset-name>/training.tfrecord.classes`, or
+- one `.npy` file per class in `dataset/`. Each array should contain 784
+  bitmap features or 800 legacy QuickDraw features.
+
+The TFRecord loader rasterizes delta-encoded strokes to 28-by-28 bitmaps. Data
+is split by class into 80% train, 10% development, and 10% test sets. The
+random seed is fixed for reproducible splits.
+
+## Setup
+
+Use Python 3.11 or 3.12 and create a virtual environment:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+TensorFlow is required for TFRecord loading and neural-network training.
+TensorBoard and a GPU-enabled TensorFlow installation are optional.
+
+All commands below can be run from the repository root. Use `--help` to view
+the options for a specific script.
+
+## Shared data options
+
+The classifier scripts support these common options:
+
+- `--ip-folder`: dataset directory (default: `dataset/`)
+- `--op-folder`: output directory (default: `results/`)
+- `--classes`: class names to train; omit it to load every available class
+- `--max-examples`: maximum examples per class (default: `100`; `0` loads all
+  available examples)
+- `--experiment-name`: optional output suffix for neural-network runs
+
+Quote class names that contain spaces:
+
+```sh
+python -m Classifications.cnn --classes banana "paint can" "The Mona Lisa"
+```
 
 ## Train the SVM classifier
 
@@ -35,6 +86,21 @@ number; defaults to `scale`). For example:
 ```sh
 python -m Classifications.svm --classes banana eraser belt --max-examples 70000 --kernel rbf --gamma scale
 ```
+
+Use `--help` for all options.
+
+## Train the RNN
+
+The RNN module is in `RNN/rnn.py`. It includes SimpleRNN and bidirectional
+GRU architectures, plus convolutional-GRU variants:
+
+```sh
+python -m RNN.rnn --classes banana eraser belt --max-examples 500 --max-epochs 20 --model v6 --experiment-name three-class-gru
+```
+
+Use `--model all` to train every architecture, or select `v1` through `v7`.
+Enable TensorBoard logging with `--tensorboard`. Results include a model,
+weights, class names, confusion matrix, and text report under `results/`.
 
 Use `--help` for all options.
 
@@ -109,5 +175,21 @@ python -m Classifications.logs --classes banana eraser belt --max-examples 70000
 It reports dev and test accuracy and saves a dev-set confusion matrix to
 `results/`. Use `--max-iter` to change the solver iteration limit.
 
-## So far.. 
-The best results have been (for 3 classes) from SVM RBF with gamma scale, and CNN with the base example (67% and 84% respectively). 
+## Project structure
+
+- `Classifications/data.py`: dataset loading and train/dev/test splitting
+- `Classifications/svm.py`: linear, polynomial, RBF, and sigmoid SVM classifiers
+- `Classifications/randomforest.py`: random forest classifier
+- `Classifications/logs.py`: logistic-regression baseline
+- `Classifications/cnn.py`: convolutional neural network
+- `Classifications/vgg.py`: VGG16 transfer learning and fine-tuning
+- `RNN/rnn.py`: SimpleRNN, GRU, and convolutional-GRU architectures
+- `Classifications/utils.py`: labels and plotting helpers
+- `dataset/`: downloaded QuickDraw TFRecord or NumPy data
+- `results/`: trained models, weights, reports, plots, and TensorBoard logs
+
+## Results
+
+For the existing three-class examples, the best recorded results are SVM RBF
+with gamma `scale` at 67% and the base CNN example at 84%. Results vary with
+class selection, examples per class, random split, and training configuration.
